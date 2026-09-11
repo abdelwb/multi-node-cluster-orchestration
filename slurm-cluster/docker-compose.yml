@@ -1,0 +1,56 @@
+version: "3.8"
+
+# Deliberately its own network, separate from ray-cluster/monitoring - a
+# training partition is often network-segmented from serving/inference in
+# production. See the root README's architecture diagram.
+
+services:
+  slurmctld:
+    build: .
+    container_name: slurmctld
+    hostname: slurmctld
+    environment:
+      - ROLE=controller
+    volumes:
+      - munge-key:/etc/munge
+      - slurmctld-state:/var/spool/slurmctld
+      - ./jobs:/home/demo/jobs
+    networks:
+      - slurm
+
+  compute1:
+    build: .
+    container_name: compute1
+    hostname: compute1
+    environment:
+      - ROLE=compute
+      - SLURMD_NODENAME=compute1
+    volumes:
+      - munge-key:/etc/munge
+      - ./jobs:/home/demo/jobs
+    depends_on:
+      - slurmctld
+    networks:
+      - slurm
+
+  compute2:
+    build: .
+    container_name: compute2
+    hostname: compute2
+    environment:
+      - ROLE=compute
+      - SLURMD_NODENAME=compute2
+    volumes:
+      - munge-key:/etc/munge
+      - ./jobs:/home/demo/jobs
+    depends_on:
+      - slurmctld
+    networks:
+      - slurm
+
+networks:
+  slurm:
+
+volumes:
+  munge-key:
+  slurmctld-state:
