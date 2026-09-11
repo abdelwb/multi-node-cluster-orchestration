@@ -1,0 +1,6 @@
+# Force LF line endings for everything, regardless of platform. Several of
+# these files (entrypoint.sh, the sbatch script, the Dockerfile) run inside
+# Linux containers - if Windows Git checks them out as CRLF, bash chokes on
+# the trailing \r ("$'\r': command not found") and the containers fail to
+# start.
+* text=auto eol=lf

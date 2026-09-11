@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Logs
+*.log
+slurm-cluster/jobs/logs/*
+!slurm-cluster/jobs/logs/.gitkeep
+
+# Docker / OS
+.DS_Store
+Thumbs.db
+
+# Grafana/Prometheus local state (if bind-mounted instead of named volumes)
+monitoring/grafana-data/
+monitoring/prometheus-data/
+
+# Editor
+.vscode/
+.idea/
