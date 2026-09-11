@@ -39,11 +39,11 @@
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
       "datasource": { "type": "prometheus", "uid": "Prometheus" },
-      "description": "Exact Ray metric names vary by Ray version - check /metrics on ray-head:8080 and adjust this query to match (see ray-cluster/README.md).",
+      "description": "Validated against Ray 2.34.0. If it shows no data on another version, see monitoring/README.md's troubleshooting section.",
       "targets": [
         {
           "expr": "ray_serve_num_ongoing_http_requests",
-          "legendFormat": "{{deployment}}"
+          "legendFormat": "{{instance}}"
         }
       ]
     },
