@@ -34,7 +34,7 @@ available_node_types:
 
     gpu_worker_node:
         node_config:
-            # A GPU instance pulling an NVIDIA NGC container at launch  - 
+            # A GPU instance pulling an NVIDIA NGC container at launch -
             # the equivalent of the Slurm Pyxis/Enroot path, but for Ray.
             InstanceType: g5.xlarge
             ImageId: latest_dlami
