@@ -19,11 +19,21 @@ URL = "http://localhost:8000/predict"
 
 
 def one_request(_):
+    """Returns elapsed ms, or None on failure.
+
+    Deliberately swallows request errors instead of letting them propagate:
+    at high concurrency against a single starting replica, a request can
+    queue longer than the timeout while the autoscaler is still adding
+    capacity. One such timeout used to crash pool.map() and kill the whole
+    run - and with it, the load that would have proven the point.
+    """
     start = time.perf_counter()
-    resp = requests.get(URL, timeout=10)
-    elapsed_ms = (time.perf_counter() - start) * 1000
-    resp.raise_for_status()
-    return elapsed_ms
+    try:
+        resp = requests.get(URL, timeout=20)
+        resp.raise_for_status()
+    except requests.exceptions.RequestException:
+        return None
+    return (time.perf_counter() - start) * 1000
 
 
 def main():
@@ -33,22 +43,26 @@ def main():
     args = p.parse_args()
 
     print(f"Sending {args.requests} requests at concurrency={args.concurrency} to {URL}")
-    latencies = []
+    results = []
     start = time.perf_counter()
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.concurrency) as pool:
-        for latency_ms in pool.map(one_request, range(args.requests)):
-            latencies.append(latency_ms)
+        for result in pool.map(one_request, range(args.requests)):
+            results.append(result)
 
     total_time = time.perf_counter() - start
-    throughput = args.requests / total_time
+    latencies = [r for r in results if r is not None]
+    failed = len(results) - len(latencies)
+    throughput = len(latencies) / total_time
 
     print("\n--- Results ---")
     print(f"Total time:     {total_time:.2f}s")
+    print(f"Succeeded:      {len(latencies)}/{args.requests} ({failed} failed/timed out)")
     print(f"Throughput:     {throughput:.1f} req/sec")
-    print(f"Latency p50:    {statistics.median(latencies):.1f} ms")
-    print(f"Latency mean:   {statistics.mean(latencies):.1f} ms")
-    print(f"Latency max:    {max(latencies):.1f} ms")
+    if latencies:
+        print(f"Latency p50:    {statistics.median(latencies):.1f} ms")
+        print(f"Latency mean:   {statistics.mean(latencies):.1f} ms")
+        print(f"Latency max:    {max(latencies):.1f} ms")
     print("\nWatch replica count scale up during this run at http://localhost:8265")
 
 
