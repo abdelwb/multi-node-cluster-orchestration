@@ -19,6 +19,20 @@ This project is a direct, hands-on answer to a job requirement of this shape:
 | Performance monitoring & analysis | [`monitoring/`](monitoring) - Prometheus scraping Ray + node + (optional) **DCGM** GPU metrics, visualized in provisioned Grafana dashboards |
 | Kubernetes (mentioned as an alternative in the JD) | [docs/architecture.md](docs/architecture.md#moving-to-kubernetes) explains the equivalent KubeRay / Kubernetes path from this same design |
 
+## Seeing it under load
+
+Before a load test (this run already shows an earlier test's history, but the right edge is quiet):
+
+![Dashboard before load](docs/assets/dashboard-idle.png)
+
+During a fresh load test — host CPU, memory, and the "Ray Serve requests in flight" panel all rise together:
+
+![Dashboard during load](docs/assets/dashboard-under-load.png)
+
+That request pressure is exactly what triggers Ray Serve's autoscaler, visible on the Ray dashboard at the same moment:
+
+![Ray Serve upscaling from 1 to 4 replicas](docs/assets/ray-serve-upscaling.png)
+
 ## Architecture
 
 ```mermaid
