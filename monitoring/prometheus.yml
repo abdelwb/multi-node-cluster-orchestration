@@ -1,0 +1,26 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # One raylet per Ray node, each exporting its own metrics.
+  - job_name: ray
+    static_configs:
+      - targets:
+          - "ray-head:8080"
+          - "ray-worker-1:8080"
+          - "ray-worker-2:8080"
+
+  - job_name: node-exporter
+    static_configs:
+      - targets: ["node-exporter:9100"]
+
+  # Uncomment once dcgm-exporter is enabled in docker-compose.yml on a real
+  # GPU host - per-GPU utilization/memory/temperature/power metrics.
+  # - job_name: dcgm
+  #   static_configs:
+  #     - targets: ["dcgm-exporter:9400"]

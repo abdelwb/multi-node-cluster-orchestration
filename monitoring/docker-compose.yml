@@ -1,0 +1,58 @@
+version: "3.8"
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks:
+      - clusternet
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - clusternet
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: node-exporter
+    ports:
+      - "9100:9100"
+    networks:
+      - clusternet
+
+  # GPU performance metrics via NVIDIA's Data Center GPU Manager exporter.
+  # Requires a host with an NVIDIA GPU + the NVIDIA Container Toolkit
+  # (`nvidia-container-runtime`) installed. Uncomment on real GPU hardware
+  # to get per-GPU utilization, memory, temperature, and power draw feeding
+  # straight into the Grafana dashboards below.
+  #
+  # dcgm-exporter:
+  #   image: nvcr.io/nvidia/k8s/dcgm-exporter:3.3.7-3.5.0-ubuntu22.04
+  #   container_name: dcgm-exporter
+  #   runtime: nvidia
+  #   environment:
+  #     - NVIDIA_VISIBLE_DEVICES=all
+  #   ports:
+  #     - "9400:9400"
+  #   networks:
+  #     - clusternet
+
+networks:
+  clusternet:
+    external: true
