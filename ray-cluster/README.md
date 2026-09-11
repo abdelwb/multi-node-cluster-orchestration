@@ -22,15 +22,18 @@ Install deps and start serving (one-time per container lifetime):
 
 ```bash
 docker compose exec ray-head pip install -r /home/ray/app/requirements.txt
-docker compose exec ray-head python /home/ray/app/serve_app.py &
+docker compose exec -d ray-head python /home/ray/app/serve_app.py
 ```
+
+`exec -d` backgrounds the process inside the container itself (via Docker), so this works the same in PowerShell as it does in bash - a shell-level `&` doesn't.
 
 Load-test it and watch the autoscaler react:
 
 ```bash
-docker compose exec ray-head pip install requests
-docker compose exec ray-head python /home/ray/app/load_test.py --requests 500 --concurrency 40
+docker compose exec ray-head python /home/ray/app/load_test.py --requests 1500 --concurrency 20
 ```
+
+`requests` is already in `requirements.txt`, installed above. Concurrency much above 20 against a single starting replica can queue past the client's 10s timeout before the autoscaler adds capacity - 20 is the value this was actually validated against.
 
 Open http://localhost:8265 (Ray dashboard) during the load test to watch replica count scale from 1 towards 4.
 

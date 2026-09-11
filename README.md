@@ -111,8 +111,8 @@ Deploy and load-test the Ray Serve model:
 ```bash
 docker compose -f ray-cluster/docker-compose.yml exec ray-head \
   pip install -r /home/ray/app/requirements.txt
-docker compose -f ray-cluster/docker-compose.yml exec ray-head \
-  python /home/ray/app/serve_app.py &
+docker compose -f ray-cluster/docker-compose.yml exec -d ray-head \
+  python /home/ray/app/serve_app.py
 docker compose -f ray-cluster/docker-compose.yml exec ray-head \
   python /home/ray/app/load_test.py
 ```
