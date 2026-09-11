@@ -6,7 +6,7 @@ A 3-container multi-node Slurm cluster (1 controller + 2 compute nodes), configu
 
 - `config/slurm.conf` - cluster topology, scheduler, and GPU (`Gres`) declarations for both compute nodes
 - `config/gres.conf` - GPU device mapping (empty/commented for this CPU demo; documents exactly what to uncomment on real GPU nodes)
-- `config/cgroup.conf` - resource containment config (disabled here; documents the production `ConstrainDevices=yes` setting)
+- `config/cgroup.conf` - resource containment config (no `CgroupPlugin` set here, so slurmd autodetects; documents the production `ConstrainDevices=yes` setting)
 - `Dockerfile` / `entrypoint.sh` - one image, used for both roles; `ROLE=controller` runs `slurmctld`, `ROLE=compute` runs `slurmd`
 - `jobs/train_ddp.py` - multi-node PyTorch DDP training script (CPU/`gloo` backend)
 - `jobs/submit_distributed_training.sbatch` - the sbatch script that launches it across both nodes, with a commented-out production variant that runs the same job inside an **NVIDIA NGC** PyTorch container via Pyxis/Enroot

@@ -31,6 +31,6 @@ The Slurm half of this repo (multi-node distributed training) is the piece Kuber
 ## Security notes (what's simplified for the demo, and why)
 
 - **Munge authentication**: real; the controller and compute nodes genuinely authenticate RPCs to each other via a shared munge key, generated at first boot and shared over a Docker named volume (never baked into the image).
-- **Cgroup resource containment**: disabled here (`CgroupPlugin=disabled`) to keep the demo portable across hosts without needing privileged nested-cgroup access; documented in `slurm-cluster/config/cgroup.conf` as the first thing to re-enable on real hardware.
+- **Cgroup resource containment**: left unconfigured here (no `CgroupPlugin` line, so slurmd autodetects) to keep the demo portable across hosts without needing privileged nested-cgroup access; documented in `slurm-cluster/config/cgroup.conf` as the first thing to re-enable on real hardware.
 - **Network segmentation**: the Slurm cluster and the Ray/monitoring stack are on separate Docker networks by default, matching how training and serving environments are commonly segmented in production (see the root README's architecture diagram).
 - **Grafana admin password**: hardcoded to `admin`/`admin` via environment variable for local demo convenience only - swap for a secrets-manager-injected value before deploying anywhere reachable outside your own machine.
