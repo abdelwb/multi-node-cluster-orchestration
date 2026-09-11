@@ -1,0 +1,50 @@
+name: Validate configs
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Lint YAML
+        run: |
+          pip install yamllint
+          yamllint -c .yamllint.yml .
+
+      - name: Validate JSON dashboard files
+        run: |
+          python -m json.tool monitoring/grafana/dashboards/cluster-overview.json > /dev/null
+
+      - name: Check Python syntax
+        run: |
+          python -m py_compile \
+            slurm-cluster/jobs/train_ddp.py \
+            ray-cluster/serve_app.py \
+            ray-cluster/load_test.py
+
+      - name: Shellcheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: "."
+          severity: error
+
+      - name: Create shared network (mirrors scripts/up.sh)
+        run: docker network create clusternet
+
+      - name: Validate docker-compose files
+        run: |
+          docker compose -f slurm-cluster/docker-compose.yml config
+          docker compose -f ray-cluster/docker-compose.yml config
+          docker compose -f monitoring/docker-compose.yml config
+
+      - name: Build the Slurm cluster image
+        run: docker compose -f slurm-cluster/docker-compose.yml build
