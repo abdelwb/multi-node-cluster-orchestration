@@ -1,0 +1,61 @@
+# Ray cluster launcher config for a REAL multi-node cluster (e.g. AWS),
+# using Ray's native autoscaler rather than the static docker-compose demo
+# in this directory. Launch with:
+#
+#   ray up ray_cluster_config.yaml
+#
+# This is what "scaling using Ray to manage multi-node cluster
+# configurations" looks like on real infrastructure: the head node
+# provisions/terminates worker nodes automatically based on the resource
+# requests of pending tasks (e.g. the ModelServer deployment in
+# serve_app.py autoscaling from 1 to 4 replicas under load).
+
+cluster_name: model-serving-cluster
+
+max_workers: 8
+upscaling_speed: 1.0
+idle_timeout_minutes: 5
+
+provider:
+    type: aws
+    region: us-west-2
+    availability_zone: us-west-2a,us-west-2b
+
+auth:
+    ssh_user: ubuntu
+
+available_node_types:
+    head_node:
+        node_config:
+            InstanceType: m5.xlarge
+            ImageId: latest_dlami
+        resources: { "CPU": 4 }
+        max_workers: 0
+
+    gpu_worker_node:
+        node_config:
+            # A GPU instance pulling an NVIDIA NGC container at launch  - 
+            # the equivalent of the Slurm Pyxis/Enroot path, but for Ray.
+            InstanceType: g5.xlarge
+            ImageId: latest_dlami
+        resources: { "CPU": 4, "GPU": 1 }
+        min_workers: 0
+        max_workers: 8
+        docker:
+            image: "nvcr.io/nvidia/pytorch:24.08-py3"
+            container_name: ray_gpu_worker
+            run_options:
+                - "--gpus all"
+
+head_node_type: head_node
+
+setup_commands:
+    - pip install -U "ray[serve]" torch
+
+head_start_ray_commands:
+    - ray stop
+    - ray start --head --port=6379 --dashboard-host=0.0.0.0 --metrics-export-port=8080
+
+worker_start_ray_commands:
+    - ray stop
+    - ray start --address=$RAY_HEAD_IP:6379 --metrics-export-port=8080

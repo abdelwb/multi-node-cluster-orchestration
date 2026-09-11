@@ -1,0 +1,51 @@
+version: "3.8"
+
+# Joins the shared external "clusternet" network so Prometheus (in
+# ../monitoring) can scrape each node's /metrics endpoint directly by
+# service name. Created by scripts/up.sh|up.ps1 before this stack starts.
+
+services:
+  ray-head:
+    image: rayproject/ray:2.34.0-py311
+    container_name: ray-head
+    command: >
+      ray start --head --port=6379 --dashboard-host=0.0.0.0
+      --metrics-export-port=8080 --block
+    ports:
+      - "8265:8265"   # Ray dashboard
+      - "8000:8000"   # Ray Serve HTTP endpoint
+      - "8080:8080"   # Prometheus metrics
+      - "10001:10001" # Ray client
+    shm_size: "1gb"
+    volumes:
+      - .:/home/ray/app
+    networks:
+      - clusternet
+
+  ray-worker-1:
+    image: rayproject/ray:2.34.0-py311
+    container_name: ray-worker-1
+    command: ray start --address=ray-head:6379 --metrics-export-port=8080 --block
+    depends_on:
+      - ray-head
+    shm_size: "1gb"
+    volumes:
+      - .:/home/ray/app
+    networks:
+      - clusternet
+
+  ray-worker-2:
+    image: rayproject/ray:2.34.0-py311
+    container_name: ray-worker-2
+    command: ray start --address=ray-head:6379 --metrics-export-port=8080 --block
+    depends_on:
+      - ray-head
+    shm_size: "1gb"
+    volumes:
+      - .:/home/ray/app
+    networks:
+      - clusternet
+
+networks:
+  clusternet:
+    external: true

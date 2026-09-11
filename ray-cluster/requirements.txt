@@ -1,0 +1,5 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+ray[serve]==2.34.0
+torch
+numpy
+requests
